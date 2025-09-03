@@ -18,7 +18,7 @@ type Subscription struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 }
 
-func (s *Subscription) GetNewUUID(tx *gorm.DB) (err error) {
+func (s *Subscription) GenerateNewUUID(tx *gorm.DB) (err error) {
 	if s.ID == uuid.Nil {
 		s.ID = uuid.New()
 	}
