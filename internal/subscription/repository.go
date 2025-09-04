@@ -46,12 +46,9 @@ func (repository *SubscriptionRepository) Delete(ctx context.Context, id uuid.UU
 	return nil
 }
 
-func (repository *SubscriptionRepository) ListByUser(ctx context.Context, userID *uuid.UUID) ([]models.Subscription, error) {
+func (repository *SubscriptionRepository) ListByUser(ctx context.Context, userID uuid.UUID) ([]models.Subscription, error) {
 	var out []models.Subscription
-	q := repository.db.WithContext(ctx).Order("start_date desc")
-	if userID != nil {
-		q = q.Where("user_id = ?", *userID)
-	}
+	q := repository.db.WithContext(ctx).Where("user_id = ?", userID).Order("start_date desc")
 	if err := q.Find(&out).Error; err != nil {
 		return nil, err
 	}

@@ -14,14 +14,14 @@ type SubscriptionPatchRequest struct {
 	EndDate   *string `json:"end_date,omitempty"`
 }
 
-type SubscriptionCreateResponce struct {
+type SubscriptionCreateResponse struct {
 	SubID string `json:"subscription_id"`
 }
 
-type ErrorResponce struct {
+type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-type MessageResponce struct {
+type MessageResponse struct {
 	Message string `json:"message"`
 }
