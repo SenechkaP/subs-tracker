@@ -23,7 +23,8 @@ const (
 	ErrInvalidDateInterval     = "START DATE MUST BE BEFORE OR EQUAL TO END DATE"
 	ErrSubscriptionNotFound    = "SUBSCRIPTION WITH PROVIDED UUID DOESN'T EXIST"
 	ErrEmptyBody               = "BODY IS EMPTY"
-	ErrFetchSubscriptions      = "FAILED TO FETCH SUBSCRIPTION"
+	ErrFetchSubscriptions      = "FAILED TO FETCH SUBSCRIPTIONS"
+	ErrMissingParameter        = "MISSING START OR END OF PERIOD"
 )
 
 type SubscriptionHandlerDeps struct {
@@ -40,6 +41,7 @@ func NewSubscriptionHandler(router *http.ServeMux, deps *SubscriptionHandlerDeps
 	router.HandleFunc("POST /subscriptions", handler.CreateSubscription())
 	router.HandleFunc("PATCH /subscriptions/{sub_id}", handler.PatchSubscription())
 	router.HandleFunc("DELETE /subscriptions/{sub_id}", handler.DeleteSubscription())
+	router.HandleFunc("GET /subscriptions/sum", handler.GetSubscriptionsSumByMonth())
 	router.HandleFunc("GET /users/{user_id}/subscriptions", handler.GetUserSubscriptions())
 }
 
@@ -95,6 +97,10 @@ func (handler *SubscriptionHandler) CreateSubscription() http.HandlerFunc {
 				return
 			}
 			endDate = &t
+			if endDate.Before(startDate) {
+				res.JsonDump(w, ErrorResponse{Error: ErrInvalidDateInterval}, http.StatusBadRequest)
+				return
+			}
 		}
 
 		sub := &models.Subscription{
@@ -170,7 +176,7 @@ func (handler *SubscriptionHandler) PatchSubscription() http.HandlerFunc {
 			}
 		}
 
-		if existingSub.EndDate != nil && existingSub.StartDate.After(*existingSub.EndDate) {
+		if existingSub.EndDate != nil && existingSub.EndDate.Before(existingSub.StartDate) {
 			res.JsonDump(w, ErrorResponse{Error: ErrInvalidDateInterval}, http.StatusBadRequest)
 			return
 		}
@@ -225,5 +231,58 @@ func (handler *SubscriptionHandler) GetUserSubscriptions() http.HandlerFunc {
 		}
 
 		res.JsonDump(w, subList, http.StatusOK)
+	}
+}
+
+func (handler *SubscriptionHandler) GetSubscriptionsSumByMonth() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+
+		startParam := q.Get("start")
+		endParam := q.Get("end")
+		if startParam == "" || endParam == "" {
+			res.JsonDump(w, ErrorResponse{Error: ErrMissingParameter}, http.StatusBadRequest)
+			return
+		}
+
+		start, err := parseMonthYear(startParam)
+		if err != nil {
+			res.JsonDump(w, ErrorResponse{Error: ErrInvalidStartDate}, http.StatusBadRequest)
+			return
+		}
+		end, err := parseMonthYear(endParam)
+		if err != nil {
+			res.JsonDump(w, ErrorResponse{Error: ErrInvalidEndDate}, http.StatusBadRequest)
+			return
+		}
+
+		if end.Before(start) {
+			res.JsonDump(w, ErrorResponse{Error: ErrInvalidDateInterval}, http.StatusBadRequest)
+			return
+		}
+
+		var userID *uuid.UUID
+		if userParam := q.Get("user_id"); userParam != "" {
+			uid, err := uuid.Parse(userParam)
+			if err != nil {
+				res.JsonDump(w, ErrorResponse{Error: ErrInvalidUserUUID}, http.StatusBadRequest)
+				return
+			}
+			userID = &uid
+		}
+
+		var service *string
+		if s := q.Get("service"); s != "" {
+			service = &s
+		}
+
+		sum, err := handler.Repository.SumPriceByMonthRange(r.Context(), start, end, userID, service)
+		if err != nil {
+			log.Printf("db error (sum subscriptions): %v", err)
+			res.JsonDump(w, ErrorResponse{Error: ErrFetchSubscriptions}, http.StatusInternalServerError)
+			return
+		}
+
+		res.JsonDump(w, SubscriptionsPriceSumResponse{PriceSum: sum}, http.StatusOK)
 	}
 }

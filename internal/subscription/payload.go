@@ -18,6 +18,10 @@ type SubscriptionCreateResponse struct {
 	SubID string `json:"subscription_id"`
 }
 
+type SubscriptionsPriceSumResponse struct {
+	PriceSum int64 `json:"total_sum"`
+}
+
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
