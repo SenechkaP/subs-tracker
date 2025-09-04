@@ -28,8 +28,11 @@ func (repository *SubscriptionRepository) GetByID(ctx context.Context, id uuid.U
 	return &s, nil
 }
 
-func (repository *SubscriptionRepository) Update(ctx context.Context, s *models.Subscription) error {
-	return repository.db.WithContext(ctx).Save(s).Error
+func (repository *SubscriptionRepository) Update(ctx context.Context, s *models.Subscription) (*models.Subscription, error) {
+	if err := repository.db.WithContext(ctx).Save(s).Error; err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (repository *SubscriptionRepository) Delete(ctx context.Context, id uuid.UUID) error {

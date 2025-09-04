@@ -8,6 +8,12 @@ type SubscriptionCreateRequest struct {
 	EndDate   *string `json:"end_date,omitempty"`
 }
 
+type SubscriptionPatchRequest struct {
+	PriceRUB  *int64  `json:"price,omitempty"`
+	StartDate *string `json:"start_date,omitempty"`
+	EndDate   *string `json:"end_date,omitempty"`
+}
+
 type SubscriptionCreateResponce struct {
 	SubID string `json:"subscription_id"`
 }
