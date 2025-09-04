@@ -1,8 +1,8 @@
 package subscription
 
 import (
-	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +12,7 @@ import (
 	"github.com/SenechkaP/subs-tracker/pkg/req"
 	"github.com/SenechkaP/subs-tracker/pkg/res"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 const (
@@ -37,6 +38,7 @@ func NewSubscriptionHandler(router *http.ServeMux, deps *SubscriptionHandlerDeps
 	router.HandleFunc("GET /subscriptions/{uuid}", handler.GetSubscription())
 	router.HandleFunc("POST /subscriptions", handler.CreateSubscription())
 	router.HandleFunc("PATCH /subscriptions/{uuid}", handler.PatchSubscription())
+	router.HandleFunc("DELETE /subscriptions/{uuid}", handler.DeleteSubscription())
 }
 
 func (handler *SubscriptionHandler) GetSubscription() http.HandlerFunc {
@@ -49,7 +51,7 @@ func (handler *SubscriptionHandler) GetSubscription() http.HandlerFunc {
 		}
 		sub, err := handler.Repository.GetByID(r.Context(), subID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				res.JsonDump(w, ErrorResponce{Error: ErrSubscriptionNotFound}, http.StatusNotFound)
 				return
 			}
@@ -131,7 +133,7 @@ func (handler *SubscriptionHandler) PatchSubscription() http.HandlerFunc {
 
 		existingSub, err := handler.Repository.GetByID(r.Context(), subID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				res.JsonDump(w, ErrorResponce{Error: ErrSubscriptionNotFound}, http.StatusNotFound)
 				return
 			}
@@ -178,5 +180,30 @@ func (handler *SubscriptionHandler) PatchSubscription() http.HandlerFunc {
 		}
 
 		res.JsonDump(w, sub, http.StatusOK)
+	}
+}
+
+func (handler *SubscriptionHandler) DeleteSubscription() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		subIDstring := r.PathValue("uuid")
+		subID, err := uuid.Parse(subIDstring)
+		if err != nil {
+			res.JsonDump(w, ErrorResponce{Error: ErrInvalidSubscriptionUUID}, http.StatusBadRequest)
+			return
+		}
+		if err = handler.Repository.Delete(r.Context(), subID); err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				res.JsonDump(w, ErrorResponce{Error: ErrSubscriptionNotFound}, http.StatusNotFound)
+				return
+			}
+			res.JsonDump(w, ErrorResponce{Error: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+		res.JsonDump(
+			w,
+			MessageResponce{
+				Message: fmt.Sprintf("Subscription with id %v successfully deleted", subID),
+			},
+			http.StatusOK)
 	}
 }

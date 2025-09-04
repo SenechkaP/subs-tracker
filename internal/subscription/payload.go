@@ -21,3 +21,7 @@ type SubscriptionCreateResponce struct {
 type ErrorResponce struct {
 	Error string `json:"error"`
 }
+
+type MessageResponce struct {
+	Message string `json:"message"`
+}

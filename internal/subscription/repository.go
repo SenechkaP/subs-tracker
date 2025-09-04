@@ -36,7 +36,14 @@ func (repository *SubscriptionRepository) Update(ctx context.Context, s *models.
 }
 
 func (repository *SubscriptionRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return repository.db.WithContext(ctx).Delete(&models.Subscription{}, "id = ?", id).Error
+	result := repository.db.WithContext(ctx).Delete(&models.Subscription{}, "id = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (repository *SubscriptionRepository) ListByUser(ctx context.Context, userID *uuid.UUID) ([]models.Subscription, error) {
