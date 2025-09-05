@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: Subscriptions API
+  version: "1.0.0"
+  description: API for managing user subscriptions.
+servers:
+  - url: http://localhost:8081
+paths:
+  /subscriptions/{sub_id}:
+    get:
+      tags: [subscriptions]
+      summary: Get subscription by id
+      parameters:
+        - name: sub_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [subscriptions]
+      summary: Patch subscription
+      parameters:
+        - name: sub_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionPatchRequest"
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [subscriptions]
+      summary: Delete subscription
+      parameters:
+        - name: sub_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /subscriptions:
+    post:
+      tags: [subscriptions]
+      summary: Create subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionCreateRequest"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionCreateResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /subscriptions/sum:
+    get:
+      tags: [subscriptions]
+      summary: Sum subscriptions by month range
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "01-2025"
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "06-2025"
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: service
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sum
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionsPriceSumResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/{user_id}/subscriptions:
+    get:
+      tags: [users]
+      summary: List subscriptions for a user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        service:
+          type: string
+          example: "Netflix"
+        price_rub:
+          type: number
+          format: double
+          example: 499
+        user_id:
+          type: string
+          format: uuid
+          example: "8a7f9f6e-3f2b-4c2a-9d5b-1a2b3c4d5e6f"
+        start_date:
+          type: string
+          example: "07-2025"
+        end_date:
+          type: string
+          nullable: true
+          example: "08-2025"
+      required: [id, service, price_rub, user_id, start_date]
+
+    SubscriptionCreateRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        service:
+          type: string
+        price_rub:
+          type: number
+        start_date:
+          type: string
+          example: "05-2025"
+        end_date:
+          type: string
+          nullable: true
+          example: "07-2025"
+      required: [user_id, service, price_rub, start_date]
+
+    SubscriptionCreateResponse:
+      type: object
+      properties:
+        sub_id:
+          type: string
+          format: uuid
+
+    SubscriptionPatchRequest:
+      type: object
+      properties:
+        price_rub:
+          type: number
+          nullable: true
+        start_date:
+          type: string
+          nullable: true
+          example: "03-2025"
+        end_date:
+          type: string
+          nullable: true
+          example: ""
+    
+    SubscriptionsPriceSumResponse:
+      type: object
+      properties:
+        price_sum:
+          type: number
+          example: 1497
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
