@@ -10,6 +10,17 @@
 + Список подписок пользователя
 + Подсчёт общей стоимости активных подписок за выбранный диапазон месяцев
 
+# Пример .env файла (расположить в корне проекта)
+
+```
+POSTGRES_USER=user
+POSTGRES_PASSWORD=passwordfordb
+POSTGRES_DB=substracker_db
+POSTGRES_HOST=db
+POSTGRES_PORT=5432
+APP_PORT=8081
+```
+
 # Запуск
 
 ```bash
