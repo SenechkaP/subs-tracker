@@ -8,10 +8,10 @@ import (
 )
 
 type Subscription struct {
-	ID        uuid.UUID  `gorm:"type:uuid;primaryKey" json:"id"`
+	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;index" json:"id"`
 	Service   string     `gorm:"not null" json:"service_name"`
 	PriceRUB  int64      `gorm:"not null" json:"price"`
-	UserID    uuid.UUID  `gorm:"type:uuid;not null" json:"user_id"`
+	UserID    uuid.UUID  `gorm:"type:uuid;not null;index" json:"user_id"`
 	StartDate time.Time  `gorm:"not null" json:"start_date"`
 	EndDate   *time.Time `json:"end_date,omitempty"`
 	CreatedAt time.Time  `json:"created_at"`
