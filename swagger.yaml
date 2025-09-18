@@ -156,31 +156,47 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /users/{user_id}/subscriptions:
-    get:
-      tags: [users]
-      summary: List subscriptions for a user
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        "200":
-          description: List of subscriptions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Subscription"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+      get:
+        tags: [users]
+        summary: List subscriptions for a user
+        parameters:
+          - name: user_id
+            in: path
+            required: true
+            schema:
+              type: string
+              format: uuid
+          - name: limit
+            in: query
+            required: false
+            schema:
+              type: integer
+              minimum: 1
+              default: 10
+            description: Number of items per page (default = 10)
+          - name: offset
+            in: query
+            required: false
+            schema:
+              type: integer
+              minimum: 0
+              default: 0
+            description: Number of items to skip (default = 0)
+        responses:
+          "200":
+            description: List of subscriptions
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Subscription"
+          "400":
+            description: Bad request
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
