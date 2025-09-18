@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/SenechkaP/subs-tracker/internal/logger"
@@ -24,7 +25,8 @@ const (
 	ErrSubscriptionNotFound    = "SUBSCRIPTION WITH PROVIDED UUID DOESN'T EXIST"
 	ErrEmptyBody               = "BODY IS EMPTY"
 	ErrFetchSubscriptions      = "FAILED TO FETCH SUBSCRIPTIONS"
-	ErrMissingParameter        = "MISSING START OR END OF PERIOD"
+	ErrMissingParameter        = "MISSING QUERY PARAMETER"
+	ErrInvalidParameter        = "QUERY PARAMETER IS INVALID"
 )
 
 type SubscriptionHandlerDeps struct {
@@ -245,7 +247,30 @@ func (handler *SubscriptionHandler) GetUserSubscriptions() http.HandlerFunc {
 			res.JsonDump(w, ErrorResponse{Error: ErrInvalidUserUUID}, http.StatusBadRequest)
 			return
 		}
-		subList, err := handler.Repository.ListByUser(r.Context(), userID)
+
+		q := r.URL.Query()
+		offset := 0
+		limit := 10
+
+		if offsetStr := q.Get("offset"); offsetStr != "" {
+			if v, err := strconv.Atoi(offsetStr); err == nil && v >= 0 {
+				offset = v
+			} else {
+				res.JsonDump(w, ErrorResponse{Error: ErrInvalidParameter}, http.StatusBadRequest)
+				return
+			}
+		}
+
+		if limitStr := q.Get("limit"); limitStr != "" {
+			if v, err := strconv.Atoi(limitStr); err == nil && v > 0 {
+				limit = v
+			} else {
+				res.JsonDump(w, ErrorResponse{Error: ErrInvalidParameter}, http.StatusBadRequest)
+				return
+			}
+		}
+
+		subList, err := handler.Repository.ListByUser(r.Context(), userID, offset, limit)
 		if err != nil {
 			logger.Log.Errorf("GetUserSubscriptions db error user_id=%s err=%v", userID.String(), err)
 			res.JsonDump(w, ErrorResponse{Error: ErrFetchSubscriptions}, http.StatusInternalServerError)
