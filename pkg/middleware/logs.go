@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/SenechkaP/subs-tracker/internal/logger"
 )
 
 func Logging(next http.Handler) http.Handler {
@@ -14,6 +15,11 @@ func Logging(next http.Handler) http.Handler {
 			Statuscode:     0,
 		}
 		next.ServeHTTP(wrapper, r)
-		log.Println(wrapper.Statuscode, r.Method, r.URL.Path, time.Since(start))
+		logger.Access.Infof("%d %s %s %v",
+			wrapper.Statuscode,
+			r.Method,
+			r.URL.Path,
+			time.Since(start),
+		)
 	})
 }

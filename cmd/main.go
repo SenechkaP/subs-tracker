@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/SenechkaP/subs-tracker/configs"
+	"github.com/SenechkaP/subs-tracker/internal/logger"
 	"github.com/SenechkaP/subs-tracker/internal/migrations"
 	"github.com/SenechkaP/subs-tracker/internal/subscription"
 	"github.com/SenechkaP/subs-tracker/pkg/db"
@@ -20,7 +20,7 @@ func App(envPath string) http.Handler {
 	conf := configs.LoadConfig(envPath)
 	database := db.NewDb(conf)
 	if err := migrations.RunMigrations(database); err != nil {
-		log.Fatalf("migrate failed: %v", err)
+		logger.Log.Fatalf("migrate failed: %v", err)
 	}
 
 	router := http.NewServeMux()
@@ -42,7 +42,7 @@ func main() {
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			logger.Log.Fatalf("listen: %s\n", err)
 		}
 	}()
 
@@ -53,6 +53,6 @@ func main() {
 	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelShutdown()
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		log.Fatalf("server shutdown failed:%+v", err)
+		logger.Log.Fatalf("server shutdown failed:%+v", err)
 	}
 }

@@ -1,9 +1,9 @@
 package configs
 
 import (
-	"log"
 	"os"
 
+	"github.com/SenechkaP/subs-tracker/internal/logger"
 	"github.com/joho/godotenv"
 )
 
@@ -19,7 +19,7 @@ type Config struct {
 func LoadConfig(envPath string) *Config {
 	if envPath != "" {
 		if err := godotenv.Load(envPath); err != nil {
-			log.Printf("warning: could not load env file %s: %v", envPath, err)
+			logger.Log.Fatalf("warning: could not load env file %s: %v", envPath, err)
 		}
 	}
 
