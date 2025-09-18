@@ -8,6 +8,8 @@ require (
 	gorm.io/gorm v1.30.2
 )
 
+require golang.org/x/sys v0.28.0 // indirect
+
 require (
 	github.com/go-gormigrate/gormigrate/v2 v2.1.4
 	github.com/google/uuid v1.6.0
@@ -17,6 +19,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
